@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:internflow/models/UserModel.dart';
+import 'package:internflow/screens/home/work_update_screen.dart';
 import 'package:internflow/services/auth.dart';
 
 class Home extends StatefulWidget {
@@ -70,6 +71,18 @@ class _HomeState extends State<Home> {
                       Text('Email: ${_userModel!.email}'),
                       Text('Role: ${_userModel!.role}'),
                       Text('UID: ${_userModel!.uid}'),
+                      const SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const WorkUpdateScreen()),
+                          );
+                        },
+                        child: const Text('Submit Daily Work Update'),
+                      ),
+                      const SizedBox(height: 10),
                     ],
                   ),
                 ),
