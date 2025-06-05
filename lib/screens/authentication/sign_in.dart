@@ -37,9 +37,8 @@ class _SignInState extends State<SignIn> {
                   );
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Sign In Successful')),
+                    SnackBar(content: Text('Signed in as ${result.uid}')),
                   );
-                  // Navigate to home or another screen if needed
                 }
               },
               child: const Text('Sign In'),
