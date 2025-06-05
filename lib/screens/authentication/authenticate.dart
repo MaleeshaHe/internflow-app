@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:internflow/screens/authentication/register.dart';
 import 'package:internflow/screens/authentication/sign_in.dart';
 
+
 class Authenticate extends StatefulWidget {
   const Authenticate({super.key});
 
@@ -10,10 +11,21 @@ class Authenticate extends StatefulWidget {
 }
 
 class _AuthenticateState extends State<Authenticate> {
+  bool singinPage = true;
+
+  //toggle pages
+  void switchPages() {
+    setState(() {
+      singinPage = !singinPage;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: SignIn(),
-    );
+    if (singinPage == true) {
+      return SignIn(toggle: switchPages);
+    } else {
+      return Register(toggle: switchPages);
+    }
   }
 }
