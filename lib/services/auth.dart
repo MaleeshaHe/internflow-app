@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:internflow/models/UserModel.dart';
 
@@ -28,11 +29,21 @@ class AuthServices {
   }
 
   //register using email and password
-  Future registerWithEmailAndPassword(String email, String password) async {
+  Future registerWithEmailAndPassword(
+      String email, String password, String name) async {
     try {
       UserCredential result = await _auth.createUserWithEmailAndPassword(
           email: email, password: password);
       User? user = result.user;
+
+      // Save user data to Firestore
+      await FirebaseFirestore.instance.collection('users').doc(user!.uid).set({
+        'uid': user.uid,
+        'email': email,
+        'name': name,
+        'role': 'intern',
+        'joinDate': Timestamp.now(),
+      });
 
       return _userWithFirebaseUserUid(user);
     } catch (err) {

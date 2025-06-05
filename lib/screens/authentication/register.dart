@@ -11,98 +11,250 @@ class Register extends StatefulWidget {
 
 class _RegisterState extends State<Register> {
   final AuthServices _auth = AuthServices();
-
-  //from key
   final _formKey = GlobalKey<FormState>();
-  //email password states
+  String name = "";
   String email = "";
   String password = "";
   String error = "";
+  bool _isLoading = false;
+  bool _obscurePassword = true;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Register'),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'Register Screen',
-              style: TextStyle(fontSize: 24),
-            ),
-            const SizedBox(height: 20),
-            Form(
-              key: _formKey,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              const SizedBox(height: 40),
+              Center(
+                child: FlutterLogo(
+                  size: 100,
+                  style: FlutterLogoStyle.markOnly,
+                ),
+              ),
+              const SizedBox(height: 32),
+              Text(
+                'Create Account',
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Join us to get started',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: Colors.grey[600],
+                    ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 32),
+              Form(
+                key: _formKey,
                 child: Column(
                   children: <Widget>[
                     TextFormField(
-                      decoration: const InputDecoration(labelText: 'Email'),
+                      decoration: InputDecoration(
+                        labelText: 'Full Name',
+                        prefixIcon: const Icon(Icons.person_outlined),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
                       validator: (val) =>
-                          val!.isEmpty ? 'Enter an email' : null,
+                          val!.isEmpty ? 'Please enter your name' : null,
+                      onChanged: (val) {
+                        setState(() => name = val);
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      decoration: InputDecoration(
+                        labelText: 'Email',
+                        prefixIcon: const Icon(Icons.email_outlined),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ), // ← FIXED: missing closing parenthesis here
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (val) =>
+                          val!.isEmpty ? 'Please enter your email' : null,
                       onChanged: (val) {
                         setState(() => email = val);
                       },
                     ),
+                    const SizedBox(height: 16),
                     TextFormField(
-                      decoration: const InputDecoration(labelText: 'Password'),
-                      obscureText: true,
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        prefixIcon: const Icon(Icons.lock_outlined),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            });
+                          },
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      obscureText: _obscurePassword,
                       validator: (val) => val!.length < 6
-                          ? 'Enter a password 6+ chars long'
+                          ? 'Password must be at least 6 characters'
                           : null,
                       onChanged: (val) {
                         setState(() => password = val);
                       },
                     ),
-                    const SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: () async {
-                        if (_formKey.currentState!.validate()) {
-                          dynamic result = await _auth
-                              .registerWithEmailAndPassword(email, password);
-                          if (result == null) {
-                            setState(() => error =
-                                'Please supply a valid email and password');
-                          }
-                        }
-                      },
-                      child: const Text('Register'),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(context).primaryColor,
+                          disabledBackgroundColor: Colors.grey[400],
+                          foregroundColor: Colors.white,
+                          disabledForegroundColor: Colors.white70,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: _isLoading ? 0 : 2,
+                        ),
+                        onPressed: _isLoading
+                            ? null
+                            : () async {
+                                if (_formKey.currentState!.validate()) {
+                                  setState(() {
+                                    _isLoading = true;
+                                    error = "";
+                                  });
+                                  try {
+                                    dynamic result = await _auth
+                                        .registerWithEmailAndPassword(
+                                            email, password, name);
+                                    if (result == null) {
+                                      setState(() => error =
+                                          'Registration failed. Please try again.');
+                                    }
+                                  } finally {
+                                    if (mounted) {
+                                      setState(() => _isLoading = false);
+                                    }
+                                  }
+                                }
+                              },
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 200),
+                          child: _isLoading
+                              ? const SizedBox(
+                                  key: ValueKey('loading'),
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.5,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white),
+                                  ),
+                                )
+                              : const Text(
+                                  'Create Account',
+                                  key: ValueKey('text'),
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                        ),
+                      ),
                     ),
-                    const SizedBox(height: 12.0),
-                    Text(
-                      error,
-                      style: const TextStyle(color: Colors.red, fontSize: 14.0),
-                    ),
-                    SizedBox(height: 20),
-                    // Sign in anonymously
-                    ElevatedButton(
-                      onPressed: () async {
-                        dynamic result = await _auth.signInAnonymously();
-                        if (result == null) {
-                          setState(() => error = 'Error signing in');
-                        } else {
-                          setState(() => error = 'Signed in as ${result.uid}');
-                        }
-                      },
-                      child: const Text('Sign in Anonymously'),
-                    ),
-                    const SizedBox(height: 20),
-                    // Toggle to sign in page
-                    ElevatedButton(
-                      onPressed: () {
-                        widget.toggle();
-                      },
-                      child: const Text('Sign In'),
-                    ),
+                    const SizedBox(height: 16),
+                    if (error.isNotEmpty)
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.red[50],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.error_outline, color: Colors.red),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                error,
+                                style: const TextStyle(color: Colors.red),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                   ],
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 32),
+              Row(
+                children: [
+                  Expanded(
+                    child: Divider(
+                      color: Colors.grey[300],
+                      thickness: 1,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      'OR',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Divider(
+                      color: Colors.grey[300],
+                      thickness: 1,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 32),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "Already have an account?",
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      widget.toggle();
+                    },
+                    child: Text(
+                      'Sign In',
+                      style: TextStyle(
+                        color: Theme.of(context).primaryColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
     );
