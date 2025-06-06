@@ -6,6 +6,7 @@ import 'package:internflow/components/intern_summary_card.dart';
 import 'package:internflow/models/UserModel.dart';
 import 'package:internflow/models/WorkUpdateModel.dart';
 import 'package:internflow/screens/authentication/user_service.dart';
+import 'package:internflow/screens/home/work_update_detail_page.dart';
 import 'package:internflow/services/auth.dart';
 import 'package:internflow/services/work_update_service.dart';
 
@@ -74,6 +75,26 @@ class _InternViewState extends State<InternView> {
                       const SizedBox(height: 20),
                       const InternActionButton(),
                       const SizedBox(height: 20),
+                      // Button for view all work updates
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  WorkUpdateDetailPage(userId: _userModel!.uid),
+                            ),
+                          );
+                        },
+                        child: const Text('View All Work Updates'),
+                        style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
                       InternSummaryCard(workUpdates: _workUpdates),
                     ],
                   ),
