@@ -1,8 +1,6 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class WorkUpdate {
   final String userId;
-  final String date; // ISO format: yyyy-MM-dd
+  final String date;
   final bool plan;
   final bool coding;
   final bool debugging;
