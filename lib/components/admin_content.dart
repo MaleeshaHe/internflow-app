@@ -7,7 +7,6 @@ import 'package:table_calendar/table_calendar.dart';
 import 'admin_leave_dialog.dart';
 
 class AdminContent extends StatelessWidget {
-  final List<UserModel> admins;
   final Map<String, String> internNames;
   final Map<DateTime, List<String>> leaveEvents;
   final CalendarFormat calendarFormat;
@@ -18,14 +17,13 @@ class AdminContent extends StatelessWidget {
 
   const AdminContent({
     super.key,
-    required this.admins,
     required this.internNames,
     required this.leaveEvents,
     required this.calendarFormat,
     required this.focusedDay,
     required this.onFormatChanged,
     required this.onPageChanged,
-    required this.onRefresh,
+    required this.onRefresh, required List<UserModel> admins,
   });
 
   List<String> _getUsersOnLeave(DateTime day) {
@@ -50,7 +48,6 @@ class AdminContent extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AdminListWidget(admins: admins),
           const SizedBox(height: 30),
           Center(
             child: ElevatedButton.icon(

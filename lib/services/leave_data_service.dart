@@ -75,4 +75,12 @@ class LeaveDataService {
 
     return snapshot.docs.map((doc) => WorkUpdate.fromMap(doc.data())).toList();
   }
+
+  Future<List<UserModel>> getAllInterns() async {
+    final snapshot = await _firestore.collection('users').get();
+    final users = snapshot.docs
+        .map((doc) => UserModel.fromMap(doc.data(), doc.id))
+        .toList();
+    return users.where((u) => u.role == 'intern').toList();
+  }
 }
