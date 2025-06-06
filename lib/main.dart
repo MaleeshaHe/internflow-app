@@ -22,6 +22,14 @@ class MyApp extends StatelessWidget {
       value: AuthServices().user,
       child: MaterialApp(
         title: 'InternFlow',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+          scaffoldBackgroundColor: Colors.white,
+          colorScheme: ColorScheme.fromSwatch(
+            primarySwatch: Colors.blue,
+            accentColor: Colors.blueAccent,
+          ).copyWith(secondary: Colors.blueAccent),
+        ),
         debugShowCheckedModeBanner: false,
         home: Wrapper(),
       ),
