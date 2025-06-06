@@ -16,7 +16,6 @@ class _WorkUpdateDetailPageState extends State<WorkUpdateDetailPage> {
   List<WorkUpdate> _updates = [];
   bool _isLoading = true;
 
-  // Filtering state
   DateTimeRange? _selectedRange;
   Set<String> _selectedActivities = {};
 
@@ -48,10 +47,8 @@ class _WorkUpdateDetailPageState extends State<WorkUpdateDetailPage> {
     }
   }
 
-  // Filtering logic
   List<WorkUpdate> get _filteredUpdates {
     return _updates.where((update) {
-      // Date filter
       bool dateOk = true;
       if (_selectedRange != null) {
         final updateDate = DateTime.tryParse(update.date);
@@ -62,7 +59,7 @@ class _WorkUpdateDetailPageState extends State<WorkUpdateDetailPage> {
                   .isBefore(_selectedRange!.end.add(const Duration(days: 1)));
         }
       }
-      // Activity filter
+
       bool activityOk = _selectedActivities.isEmpty ||
           (_selectedActivities.contains('plan') && update.plan) ||
           (_selectedActivities.contains('coding') && update.coding) ||
@@ -76,135 +73,135 @@ class _WorkUpdateDetailPageState extends State<WorkUpdateDetailPage> {
   }
 
   void _showFilterDialog() async {
-    DateTimeRange? pickedRange = _selectedRange;
-    Set<String> pickedActivities = Set.from(_selectedActivities);
+    DateTimeRange? tempRange = _selectedRange;
+    Set<String> tempActivities = Set.from(_selectedActivities);
 
-    await showDialog(
+    await showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setStateDialog) {
-            return AlertDialog(
-              title: const Text('Filter Work Updates'),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ElevatedButton.icon(
-                      icon: const Icon(Icons.date_range),
-                      label: Text(
-                        pickedRange == null
-                            ? 'Select Date Range'
-                            : '${pickedRange?.start.toString().substring(0, 10)} - ${pickedRange?.end.toString().substring(0, 10)}',
-                      ),
-                      onPressed: () async {
-                        final now = DateTime.now();
-                        final range = await showDateRangePicker(
-                          context: context,
-                          firstDate: DateTime(now.year - 1),
-                          lastDate: now,
-                          initialDateRange: pickedRange,
-                        );
-                        if (range != null) {
-                          setStateDialog(() {
-                            pickedRange = range;
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            top: 20,
+            left: 20,
+            right: 20,
+          ),
+          child: StatefulBuilder(
+            builder: (context, setStateDialog) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    "Filter Work Updates",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.date_range),
+                    label: Text(
+                      tempRange == null
+                          ? 'Select Date Range'
+                          : '${DateFormat.yMMMd().format(tempRange!.start)} - ${DateFormat.yMMMd().format(tempRange!.end)}',
+                    ),
+                    onPressed: () async {
+                      final now = DateTime.now();
+                      final range = await showDateRangePicker(
+                        context: context,
+                        firstDate: DateTime(now.year - 1),
+                        lastDate: now,
+                        initialDateRange: tempRange,
+                      );
+                      if (range != null) {
+                        setStateDialog(() {
+                          tempRange = range;
+                        });
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  const Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text('Activity Types:',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w600)),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 8,
+                    children: [
+                      _activityChip(
+                          'Plan', 'plan', tempActivities, setStateDialog),
+                      _activityChip(
+                          'Coding', 'coding', tempActivities, setStateDialog),
+                      _activityChip('Debugging', 'debugging', tempActivities,
+                          setStateDialog),
+                      _activityChip(
+                          'Testing', 'testing', tempActivities, setStateDialog),
+                      _activityChip(
+                          'Waiting', 'waiting', tempActivities, setStateDialog),
+                      _activityChip('On Leave', 'onLeave', tempActivities,
+                          setStateDialog),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      TextButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            _selectedRange = null;
+                            _selectedActivities.clear();
                           });
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    const Text('Activity Types:'),
-                    CheckboxListTile(
-                      title: const Text('Plan'),
-                      value: pickedActivities.contains('plan'),
-                      onChanged: (val) {
-                        setStateDialog(() {
-                          val!
-                              ? pickedActivities.add('plan')
-                              : pickedActivities.remove('plan');
-                        });
-                      },
-                    ),
-                    CheckboxListTile(
-                      title: const Text('Coding'),
-                      value: pickedActivities.contains('coding'),
-                      onChanged: (val) {
-                        setStateDialog(() {
-                          val!
-                              ? pickedActivities.add('coding')
-                              : pickedActivities.remove('coding');
-                        });
-                      },
-                    ),
-                    CheckboxListTile(
-                      title: const Text('Debugging'),
-                      value: pickedActivities.contains('debugging'),
-                      onChanged: (val) {
-                        setStateDialog(() {
-                          val!
-                              ? pickedActivities.add('debugging')
-                              : pickedActivities.remove('debugging');
-                        });
-                      },
-                    ),
-                    CheckboxListTile(
-                      title: const Text('Testing'),
-                      value: pickedActivities.contains('testing'),
-                      onChanged: (val) {
-                        setStateDialog(() {
-                          val!
-                              ? pickedActivities.add('testing')
-                              : pickedActivities.remove('testing');
-                        });
-                      },
-                    ),
-                    CheckboxListTile(
-                      title: const Text('Waiting'),
-                      value: pickedActivities.contains('waiting'),
-                      onChanged: (val) {
-                        setStateDialog(() {
-                          val!
-                              ? pickedActivities.add('waiting')
-                              : pickedActivities.remove('waiting');
-                        });
-                      },
-                    ),
-                    CheckboxListTile(
-                      title: const Text('On Leave'),
-                      value: pickedActivities.contains('onLeave'),
-                      onChanged: (val) {
-                        setStateDialog(() {
-                          val!
-                              ? pickedActivities.add('onLeave')
-                              : pickedActivities.remove('onLeave');
-                        });
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      _selectedRange = pickedRange;
-                      _selectedActivities = pickedActivities;
-                    });
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Apply'),
-                ),
-              ],
-            );
-          },
+                          Navigator.pop(context);
+                        },
+                        icon: const Icon(Icons.refresh),
+                        label: const Text("Clear Filters"),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            _selectedRange = tempRange;
+                            _selectedActivities = tempActivities;
+                          });
+                          Navigator.pop(context);
+                        },
+                        child: const Text("Apply"),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              );
+            },
+          ),
         );
       },
+    );
+  }
+
+  Widget _activityChip(String label, String key, Set<String> selectedSet,
+      void Function(void Function()) setStateDialog) {
+    final isSelected = selectedSet.contains(key);
+    return FilterChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (selected) {
+        setStateDialog(() {
+          if (selected) {
+            selectedSet.add(key);
+          } else {
+            selectedSet.remove(key);
+          }
+        });
+      },
+      selectedColor: Colors.blueAccent.withOpacity(0.2),
+      checkmarkColor: Colors.blueAccent,
     );
   }
 
@@ -245,7 +242,6 @@ class _WorkUpdateDetailPageState extends State<WorkUpdateDetailPage> {
                         DateTime.tryParse(update.submittedAt) ??
                             DateTime.now());
 
-                    // Only relevant activities
                     final activities = <Widget>[
                       if (update.plan) buildActivityIcon("Plan", Icons.event),
                       if (update.coding)
