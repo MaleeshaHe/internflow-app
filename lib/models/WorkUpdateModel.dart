@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class WorkUpdate {
   final String userId;
   final String date; // ISO format: yyyy-MM-dd
@@ -9,6 +11,7 @@ class WorkUpdate {
   final bool onLeave;
   final String description;
   final String submittedAt;
+  final Timestamp? timestamp;
 
   WorkUpdate({
     required this.userId,
@@ -21,6 +24,7 @@ class WorkUpdate {
     required this.onLeave,
     required this.description,
     required this.submittedAt,
+    this.timestamp,
   });
 
   factory WorkUpdate.fromJson(Map<String, dynamic> json) {
@@ -35,6 +39,7 @@ class WorkUpdate {
       onLeave: json['onLeave'] ?? false,
       description: json['description'] ?? '',
       submittedAt: json['submittedAt'] ?? '',
+      timestamp: json['timestamp'],
     );
   }
 
@@ -50,6 +55,7 @@ class WorkUpdate {
       'onLeave': onLeave,
       'description': description,
       'submittedAt': submittedAt,
+      'timestamp': timestamp ?? FieldValue.serverTimestamp(),
     };
   }
 }

@@ -18,8 +18,24 @@ class _InternViewState extends State<InternView> {
 
   UserModel? _userModel;
   bool _isLoading = true;
-
   List<WorkUpdate> _workUpdates = [];
+  String _selectedFilter = 'All';
+
+  final List<String> _filterOptions = [
+    'All',
+    'Plan',
+    'Coding',
+    'Debugging',
+    'Testing',
+    'Waiting',
+    'On Leave',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserDetails();
+  }
 
   Future<void> _fetchUserDetails() async {
     try {
@@ -35,7 +51,7 @@ class _InternViewState extends State<InternView> {
     } catch (e) {
       print('Error fetching user details: $e');
     }
-    await _fetchWorkUpdates(); // Wait for work updates to finish
+    await _fetchWorkUpdates();
   }
 
   Future<void> _fetchWorkUpdates() async {
@@ -52,6 +68,29 @@ class _InternViewState extends State<InternView> {
           snapshot.docs.map((doc) => WorkUpdate.fromJson(doc.data())).toList();
       _isLoading = false;
     });
+  }
+
+  List<WorkUpdate> _filteredUpdates() {
+    if (_selectedFilter == 'All') return _workUpdates;
+
+    return _workUpdates.where((update) {
+      switch (_selectedFilter) {
+        case 'Plan':
+          return update.plan;
+        case 'Coding':
+          return update.coding;
+        case 'Debugging':
+          return update.debugging;
+        case 'Testing':
+          return update.testing;
+        case 'Waiting':
+          return update.waiting;
+        case 'On Leave':
+          return update.onLeave;
+        default:
+          return false;
+      }
+    }).toList();
   }
 
   Map<String, int> _getStats() {
@@ -75,12 +114,6 @@ class _InternViewState extends State<InternView> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    _fetchUserDetails();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
@@ -90,15 +123,11 @@ class _InternViewState extends State<InternView> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () async {
-              await _fetchUserDetails();
-            },
+            onPressed: _fetchUserDetails,
           ),
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await _auth.signOut();
-            },
+            onPressed: () async => await _auth.signOut(),
           ),
         ],
       ),
@@ -117,8 +146,20 @@ class _InternViewState extends State<InternView> {
                       const SizedBox(height: 20),
                       _buildSummaryCard(),
                       const SizedBox(height: 20),
-                      if (_workUpdates.isEmpty)
-                        const Center(child: Text('No work updates found.')),
+                      _buildFilterDropdown(),
+                      const SizedBox(height: 10),
+                      _filteredUpdates().isEmpty
+                          ? const Center(
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(vertical: 40),
+                                child: Text('No work updates found.'),
+                              ),
+                            )
+                          : Column(
+                              children: _filteredUpdates()
+                                  .map(_buildUpdateCard)
+                                  .toList(),
+                            ),
                     ],
                   ),
                 ),
@@ -126,33 +167,21 @@ class _InternViewState extends State<InternView> {
   }
 
   Widget _buildUserHeader(ThemeData theme) {
-    if (_userModel == null) return const SizedBox.shrink();
-
     return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ListTile(
-          leading: const CircleAvatar(
-            radius: 28,
-            child: Icon(Icons.person, size: 32),
-          ),
-          title: Text(
-            _userModel!.name ?? '',
-            style: theme.textTheme.titleLarge
-                ?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 4),
-              Text('Email: ${_userModel!.email}'),
-              Text('Role: ${_userModel!.role}'),
-              Text('UID: ${_userModel!.uid}',
-                  style: const TextStyle(fontSize: 12)),
-            ],
-          ),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(_userModel?.name ?? '',
+                style: theme.textTheme.titleLarge
+                    ?.copyWith(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 4),
+            Text('Email: ${_userModel?.email ?? ''}'),
+            Text('Role: ${_userModel?.role ?? ''}'),
+          ],
         ),
       ),
     );
@@ -160,7 +189,7 @@ class _InternViewState extends State<InternView> {
 
   Widget _buildActionButton() {
     return ElevatedButton.icon(
-      icon: const Icon(Icons.edit_calendar),
+      icon: const Icon(Icons.add),
       label: const Text('Submit Daily Work Update'),
       style: ElevatedButton.styleFrom(
         minimumSize: const Size.fromHeight(50),
@@ -177,12 +206,11 @@ class _InternViewState extends State<InternView> {
 
   Widget _buildSummaryCard() {
     final stats = _getStats();
-
     return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -200,6 +228,51 @@ class _InternViewState extends State<InternView> {
                   ],
                 )),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterDropdown() {
+    return DropdownButtonFormField<String>(
+      value: _selectedFilter,
+      decoration: InputDecoration(
+        labelText: 'Filter by Work Type',
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      ),
+      items: _filterOptions
+          .map((type) => DropdownMenuItem(value: type, child: Text(type)))
+          .toList(),
+      onChanged: (value) {
+        setState(() => _selectedFilter = value!);
+      },
+    );
+  }
+
+  Widget _buildUpdateCard(WorkUpdate update) {
+    final timestamp = update.timestamp;
+    String formattedDate = 'Unknown';
+
+    if (timestamp != null) {
+      try {
+        formattedDate =
+            timestamp.toDate().toLocal().toString().split('.').first;
+      } catch (e) {
+        print('Error formatting timestamp: $e');
+      }
+    }
+
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 2,
+      child: ListTile(
+        leading: const Icon(Icons.task_alt_rounded),
+        title: Text(update.description ?? 'No description'),
+        subtitle: Text(
+          formattedDate,
+          style: const TextStyle(fontSize: 12),
         ),
       ),
     );
