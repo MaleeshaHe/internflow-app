@@ -46,15 +46,13 @@ class WorkUpdate {
   Map<String, dynamic> toJson() {
     return {
       'userId': userId,
-      'date': date,
+      'description': description,
       'plan': plan,
       'coding': coding,
       'debugging': debugging,
       'testing': testing,
       'waiting': waiting,
       'onLeave': onLeave,
-      'description': description,
-      'submittedAt': submittedAt,
       'timestamp': timestamp ?? FieldValue.serverTimestamp(),
     };
   }

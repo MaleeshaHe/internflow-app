@@ -168,19 +168,51 @@ class _InternViewState extends State<InternView> {
 
   Widget _buildUserHeader(ThemeData theme) {
     return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            Text(_userModel?.name ?? '',
-                style: theme.textTheme.titleLarge
-                    ?.copyWith(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 4),
-            Text('Email: ${_userModel?.email ?? ''}'),
-            Text('Role: ${_userModel?.role ?? ''}'),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _userModel?.name ?? 'Intern',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Icons.email, size: 16),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          _userModel?.email ?? '',
+                          style: theme.textTheme.bodyMedium,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Icons.badge, size: 16),
+                      const SizedBox(width: 6),
+                      Text(
+                        _userModel?.role ?? 'N/A',
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -252,8 +284,8 @@ class _InternViewState extends State<InternView> {
 
   Widget _buildUpdateCard(WorkUpdate update) {
     final timestamp = update.timestamp;
-    String formattedDate = 'Unknown';
 
+    String formattedDate = 'Date not available';
     if (timestamp != null) {
       try {
         formattedDate =
@@ -272,7 +304,7 @@ class _InternViewState extends State<InternView> {
         title: Text(update.description ?? 'No description'),
         subtitle: Text(
           formattedDate,
-          style: const TextStyle(fontSize: 12),
+          style: const TextStyle(fontSize: 12, color: Colors.grey),
         ),
       ),
     );
