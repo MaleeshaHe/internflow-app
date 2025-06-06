@@ -195,14 +195,14 @@ class _AdminViewState extends State<AdminView> {
                             color: Colors.red.shade400,
                             shape: BoxShape.circle,
                           ),
-                          markersMaxCount: 3,
-                          markerSize: 8,
+                          markersMaxCount: 2, // allow up to 10 dots per day
+                          markerSize: 10, // slightly smaller for more space
                           markerMargin:
-                              const EdgeInsets.symmetric(horizontal: 1),
+                              const EdgeInsets.symmetric(horizontal: 0.5),
                         ),
                         eventLoader: (day) {
-                          final users = _getUsersOnLeave(day);
-                          return users.isNotEmpty ? users : [];
+                          // Return one item per intern on leave
+                          return _getUsersOnLeave(day);
                         },
                         onDaySelected: (selectedDay, focusedDay) {
                           setState(() {
