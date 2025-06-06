@@ -12,11 +12,15 @@ class InternActionButton extends StatelessWidget {
       style: ElevatedButton.styleFrom(
         minimumSize: const Size.fromHeight(50),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        backgroundColor: Colors.blueAccent,
+        foregroundColor: Colors.white,
       ),
       onPressed: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const WorkUpdateScreen()),
+          MaterialPageRoute(
+            builder: (context) => const WorkUpdateScreen(),
+          ),
         );
       },
     );
