@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:internflow/models/UserModel.dart';
 
 class InternHeader extends StatelessWidget {
@@ -9,6 +10,9 @@ class InternHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final joinDateFormatted = user.joinDate != null
+        ? DateFormat('yyyy-MM-dd').format(user.joinDate!)
+        : 'N/A';
 
     return Card(
       elevation: 3,
@@ -26,6 +30,12 @@ class InternHeader extends StatelessWidget {
               const Icon(Icons.email, size: 16),
               const SizedBox(width: 6),
               Text(user.email ?? '')
+            ]),
+            const SizedBox(height: 4),
+            Row(children: [
+              const Icon(Icons.calendar_today, size: 16),
+              const SizedBox(width: 6),
+              Text('Joined: $joinDateFormatted')
             ]),
             const SizedBox(height: 4),
             Row(children: [
