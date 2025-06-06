@@ -50,7 +50,7 @@ class WorkUpdate {
       'testing': testing,
       'waiting': waiting,
       'onLeave': onLeave,
-      'submittedAt': submittedAt ?? FieldValue.serverTimestamp(),
+      'submittedAt': submittedAt,
     };
   }
 }
