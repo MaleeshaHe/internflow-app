@@ -14,52 +14,52 @@ class Wrapper extends StatelessWidget {
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, authSnapshot) {
         if (authSnapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
+          return _buildLoading();
         }
 
         final user = authSnapshot.data;
+        return user == null ? const Authenticate() : _buildUserRoleView(user);
+      },
+    );
+  }
 
-        if (user == null) {
-          return const Authenticate();
+  Widget _buildUserRoleView(User user) {
+    return FutureBuilder<DocumentSnapshot>(
+      future:
+          FirebaseFirestore.instance.collection('users').doc(user.uid).get(),
+      builder: (context, userSnapshot) {
+        if (userSnapshot.connectionState == ConnectionState.waiting) {
+          return _buildLoading();
         }
 
-        return FutureBuilder<DocumentSnapshot>(
-          future: FirebaseFirestore.instance
-              .collection('users')
-              .doc(user.uid)
-              .get(),
-          builder: (context, userSnapshot) {
-            if (userSnapshot.connectionState == ConnectionState.waiting) {
-              return const Scaffold(
-                body: Center(child: CircularProgressIndicator()),
-              );
-            }
+        if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
+          return _buildError('Failed to retrieve user data');
+        }
 
-            if (userSnapshot.hasError ||
-                !userSnapshot.hasData ||
-                !userSnapshot.data!.exists) {
-              return const Scaffold(
-                body: Center(child: Text('Failed to retrieve user data')),
-              );
-            }
+        final role =
+            (userSnapshot.data!.data() as Map<String, dynamic>)['role'];
 
-            final userData = userSnapshot.data!.data() as Map<String, dynamic>;
-            final role = userData['role'] as String?;
-
-            if (role == 'admin') {
-              return const AdminView();
-            } else if (role == 'intern') {
-              return const InternView();
-            } else {
-              return const Scaffold(
-                body: Center(child: Text('Unknown role')),
-              );
-            }
-          },
-        );
+        switch (role) {
+          case 'admin':
+            return const AdminView();
+          case 'intern':
+            return const InternView();
+          default:
+            return _buildError('Unknown role');
+        }
       },
+    );
+  }
+
+  Widget _buildLoading() {
+    return const Scaffold(
+      body: Center(child: CircularProgressIndicator()),
+    );
+  }
+
+  Widget _buildError(String message) {
+    return Scaffold(
+      body: Center(child: Text(message)),
     );
   }
 }
