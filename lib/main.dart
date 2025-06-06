@@ -21,6 +21,7 @@ class MyApp extends StatelessWidget {
       initialData: UserModel(uid: ""),
       value: AuthServices().user,
       child: MaterialApp(
+        title: 'InternFlow',
         debugShowCheckedModeBanner: false,
         home: Wrapper(),
       ),
