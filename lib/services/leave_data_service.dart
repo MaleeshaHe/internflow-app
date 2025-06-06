@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:internflow/models/UserModel.dart';
+import 'package:internflow/models/WorkUpdateModel.dart';
 
 class LeaveDataService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -66,5 +67,12 @@ class LeaveDataService {
     final leaveEvents = await getLeaveEvents();
 
     return (admins, internNames, leaveEvents);
+  }
+
+  Future<List<WorkUpdate>> getAllWorkUpdates() async {
+    final snapshot =
+        await FirebaseFirestore.instance.collection('work_updates').get();
+
+    return snapshot.docs.map((doc) => WorkUpdate.fromMap(doc.data())).toList();
   }
 }

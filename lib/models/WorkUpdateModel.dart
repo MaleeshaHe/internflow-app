@@ -51,4 +51,19 @@ class WorkUpdate {
       'submittedAt': submittedAt,
     };
   }
+
+  factory WorkUpdate.fromMap(Map<String, dynamic> map) {
+    return WorkUpdate(
+      plan: map['plan'] ?? false,
+      coding: map['coding'] ?? false,
+      debugging: map['debugging'] ?? false,
+      testing: map['testing'] ?? false,
+      waiting: map['waiting'] ?? false,
+      onLeave: map['onLeave'] ?? false,
+      userId: '',
+      date: '',
+      description: '',
+      submittedAt: '',
+    );
+  }
 }

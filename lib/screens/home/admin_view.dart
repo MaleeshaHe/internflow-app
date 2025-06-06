@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:internflow/components/admin_content.dart';
+import 'package:internflow/components/intern_summary_card.dart';
 import 'package:internflow/models/UserModel.dart';
+import 'package:internflow/models/WorkUpdateModel.dart';
 import 'package:internflow/services/auth.dart';
 import 'package:internflow/services/leave_data_service.dart';
+
 import 'package:table_calendar/table_calendar.dart';
 
 class AdminView extends StatefulWidget {
@@ -17,6 +20,7 @@ class _AdminViewState extends State<AdminView> {
   final LeaveDataService _leaveService = LeaveDataService();
 
   List<UserModel> _admins = [];
+  List<WorkUpdate> _workUpdates = [];
   Map<DateTime, List<String>> _leaveEvents = {};
   Map<String, String> _internNames = {};
 
@@ -37,9 +41,14 @@ class _AdminViewState extends State<AdminView> {
     try {
       final (admins, internNames, leaveEvents) =
           await _leaveService.getAllLeaveData();
-      _admins = admins;
-      _internNames = internNames;
-      _leaveEvents = leaveEvents;
+      final workUpdates = await _leaveService.getAllWorkUpdates();
+
+      setState(() {
+        _admins = admins;
+        _internNames = internNames;
+        _leaveEvents = leaveEvents;
+        _workUpdates = workUpdates;
+      });
     } catch (e) {
       print('Error loading data: $e');
     }
@@ -65,19 +74,32 @@ class _AdminViewState extends State<AdminView> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : AdminContent(
-              admins: _admins,
-              internNames: _internNames,
-              leaveEvents: _leaveEvents,
-              calendarFormat: _calendarFormat,
-              focusedDay: _focusedDay,
-              onFormatChanged: (format) {
-                setState(() => _calendarFormat = format);
-              },
-              onPageChanged: (focusedDay) {
-                setState(() => _focusedDay = focusedDay);
-              },
-              onRefresh: _loadData,
+          : SingleChildScrollView(
+              child: Column(
+                children: [
+                  // Work Summary Card
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: InternSummaryCard(workUpdates: _workUpdates),
+                  ),
+
+                  // Existing Admin Content
+                  AdminContent(
+                    admins: _admins,
+                    internNames: _internNames,
+                    leaveEvents: _leaveEvents,
+                    calendarFormat: _calendarFormat,
+                    focusedDay: _focusedDay,
+                    onFormatChanged: (format) {
+                      setState(() => _calendarFormat = format);
+                    },
+                    onPageChanged: (focusedDay) {
+                      setState(() => _focusedDay = focusedDay);
+                    },
+                    onRefresh: _loadData,
+                  ),
+                ],
+              ),
             ),
     );
   }
