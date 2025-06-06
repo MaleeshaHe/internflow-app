@@ -27,7 +27,6 @@ class _WorkUpdateScreenState extends State<WorkUpdateScreen> {
     setState(() {
       onLeave = value;
       if (onLeave) {
-        // If onLeave is true, set all others to false
         plan = false;
         coding = false;
         debugging = false;
@@ -38,12 +37,11 @@ class _WorkUpdateScreenState extends State<WorkUpdateScreen> {
   }
 
   void _handleOtherActivityChange(bool value, Function(bool) setStateFn) {
-    if (onLeave) return; // Don't allow changes if onLeave is true
+    if (onLeave) return;
 
     setState(() {
       setStateFn(value);
       if (value) {
-        // If any other activity is selected, ensure onLeave is false
         onLeave = false;
       }
     });
@@ -53,6 +51,16 @@ class _WorkUpdateScreenState extends State<WorkUpdateScreen> {
     if (!plan && !coding && !debugging && !testing && !waiting && !onLeave) {
       setState(() {
         statusMessage = "Please select at least one activity";
+      });
+      return;
+    }
+
+    final trimmedDescription = _descriptionController.text.trim();
+    if (trimmedDescription.isEmpty) {
+      setState(() {
+        statusMessage = onLeave
+            ? "Please provide a reason for leave"
+            : "Please describe your work";
       });
       return;
     }
@@ -69,7 +77,7 @@ class _WorkUpdateScreenState extends State<WorkUpdateScreen> {
       testing: testing,
       waiting: waiting,
       onLeave: onLeave,
-      description: _descriptionController.text.trim(),
+      description: trimmedDescription,
     );
 
     setState(() {
@@ -186,7 +194,6 @@ class _WorkUpdateScreenState extends State<WorkUpdateScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 16),
-              // Date Header
               Container(
                 padding:
                     const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
@@ -214,8 +221,6 @@ class _WorkUpdateScreenState extends State<WorkUpdateScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-
-              // Activities Section
               Text(
                 "Today's Activities",
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -262,10 +267,8 @@ class _WorkUpdateScreenState extends State<WorkUpdateScreen> {
               _buildActivityCard(
                   "On Leave", "leave", onLeave, _handleOnLeaveChange, true),
               const SizedBox(height: 24),
-
-              // Description Section
               Text(
-                "Work Description",
+                onLeave ? "Leave Reason" : "Work Description",
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -289,17 +292,16 @@ class _WorkUpdateScreenState extends State<WorkUpdateScreen> {
                   focusNode: _descriptionFocusNode,
                   maxLines: 5,
                   decoration: InputDecoration(
-                    hintText: "Describe what you worked on today...",
+                    hintText: onLeave
+                        ? "Reason for taking leave..."
+                        : "Describe what you worked on today...",
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.all(16),
                   ),
-                  enabled:
-                      otherActivitiesEnabled, // Disable if on leave is selected
+                  enabled: true,
                 ),
               ),
               const SizedBox(height: 32),
-
-              // Submit Button
               SizedBox(
                 width: double.infinity,
                 height: 50,
@@ -328,8 +330,6 @@ class _WorkUpdateScreenState extends State<WorkUpdateScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-
-              // Status Message
               if (statusMessage.isNotEmpty)
                 Container(
                   padding: const EdgeInsets.all(12),
