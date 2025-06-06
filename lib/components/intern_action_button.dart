@@ -19,7 +19,9 @@ class InternActionButton extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const WorkUpdateScreen(),
+            builder: (context) => const WorkUpdateScreen(
+              userId: '',
+            ),
           ),
         );
       },

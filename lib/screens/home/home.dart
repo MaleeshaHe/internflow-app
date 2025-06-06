@@ -77,7 +77,7 @@ class _HomeState extends State<Home> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => const WorkUpdateScreen()),
+                                builder: (context) => const WorkUpdateScreen(userId: '',)),
                           );
                         },
                         child: const Text('Submit Daily Work Update'),

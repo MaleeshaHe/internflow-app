@@ -3,7 +3,7 @@ import 'package:internflow/services/work_update_service.dart';
 import 'package:intl/intl.dart';
 
 class WorkUpdateScreen extends StatefulWidget {
-  const WorkUpdateScreen({Key? key}) : super(key: key);
+  const WorkUpdateScreen({Key? key, required String userId}) : super(key: key);
 
   @override
   State<WorkUpdateScreen> createState() => _WorkUpdateScreenState();
