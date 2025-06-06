@@ -1,12 +1,13 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:internflow/components/intern_action_button.dart';
 import 'package:internflow/components/intern_header.dart';
 import 'package:internflow/components/intern_summary_card.dart';
 import 'package:internflow/models/UserModel.dart';
 import 'package:internflow/models/WorkUpdateModel.dart';
+import 'package:internflow/screens/authentication/user_service.dart';
 import 'package:internflow/services/auth.dart';
+import 'package:internflow/services/work_update_service.dart';
 
 class InternView extends StatefulWidget {
   const InternView({super.key});
@@ -17,59 +18,44 @@ class InternView extends StatefulWidget {
 
 class _InternViewState extends State<InternView> {
   final AuthServices _auth = AuthServices();
+  final WorkUpdateService _workUpdateService = WorkUpdateService();
+
   UserModel? _userModel;
-  bool _isLoading = true;
   List<WorkUpdate> _workUpdates = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _fetchUserDetails();
+    _loadData();
   }
 
-  Future<void> _fetchUserDetails() async {
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true);
     try {
       final uid = FirebaseAuth.instance.currentUser!.uid;
-      final doc =
-          await FirebaseFirestore.instance.collection('users').doc(uid).get();
 
-      if (doc.exists) {
-        setState(() {
-          _userModel = UserModel.fromMap(doc.data()!, uid);
-        });
-      }
+      final user = await UserService().getUserById(uid);
+      final updates = await _workUpdateService.getAllUpdatesForUser(uid);
+
+      setState(() {
+        _userModel = user;
+        _workUpdates = updates;
+        _isLoading = false;
+      });
     } catch (e) {
-      print('Error fetching user details: $e');
+      print("Error loading data: $e");
+      setState(() => _isLoading = false);
     }
-    await _fetchWorkUpdates();
-  }
-
-  Future<void> _fetchWorkUpdates() async {
-    if (_userModel == null) return;
-    setState(() => _isLoading = true);
-
-    final snapshot = await FirebaseFirestore.instance
-        .collection('work_updates')
-        .where('userId', isEqualTo: _userModel!.uid)
-        .get();
-
-    setState(() {
-      _workUpdates =
-          snapshot.docs.map((doc) => WorkUpdate.fromJson(doc.data())).toList();
-      _isLoading = false;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
-    Theme.of(context);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Intern Dashboard'),
         actions: [
-          IconButton(
-              icon: const Icon(Icons.refresh), onPressed: _fetchUserDetails),
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _loadData),
           IconButton(
               icon: const Icon(Icons.logout),
               onPressed: () async => await _auth.signOut()),
@@ -80,7 +66,7 @@ class _InternViewState extends State<InternView> {
           : _userModel == null
               ? const Center(child: Text('No user data found'))
               : RefreshIndicator(
-                  onRefresh: _fetchUserDetails,
+                  onRefresh: _loadData,
                   child: ListView(
                     padding: const EdgeInsets.all(16.0),
                     children: [

@@ -42,7 +42,6 @@ class WorkUpdateService {
           .collection('work_updates')
           .doc(documentId)
           .set(update.toJson());
-
       return null; // success
     } catch (e) {
       return 'Failed to submit update: ${e.toString()}';
@@ -50,12 +49,12 @@ class WorkUpdateService {
   }
 
   /// Fetches the current user's work update for a specific date.
-  Future<WorkUpdate?> getDailyUpdate(DateTime date) async {
-    final user = _auth.currentUser;
-    if (user == null) return null;
+  Future<WorkUpdate?> getDailyUpdate(DateTime date, {String? userId}) async {
+    final uid = userId ?? _auth.currentUser?.uid;
+    if (uid == null) return null;
 
     final formattedDate = DateFormat('yyyy-MM-dd').format(date);
-    final documentId = "${user.uid}_$formattedDate";
+    final documentId = "${uid}_$formattedDate";
 
     try {
       final doc =
@@ -64,9 +63,53 @@ class WorkUpdateService {
         return WorkUpdate.fromJson(doc.data()!);
       }
     } catch (e) {
-      print("Error fetching update: $e");
+      print("Error fetching daily update: $e");
     }
 
     return null;
+  }
+
+  /// Fetches work updates for a full week starting from [startOfWeek].
+  Future<List<WorkUpdate>> getWeeklyUpdates(DateTime startOfWeek,
+      {String? userId}) async {
+    final uid = userId ?? _auth.currentUser?.uid;
+    if (uid == null) return [];
+
+    // Generate list of all 7 date strings for the week
+    final dateStrings = List.generate(7, (i) {
+      final date = startOfWeek.add(Duration(days: i));
+      return DateFormat('yyyy-MM-dd').format(date);
+    });
+
+    try {
+      final snapshot = await _firestore
+          .collection('work_updates')
+          .where('userId', isEqualTo: uid)
+          .where('date', whereIn: dateStrings)
+          .get();
+
+      return snapshot.docs
+          .map((doc) => WorkUpdate.fromJson(doc.data()))
+          .toList();
+    } catch (e) {
+      print("Error fetching weekly updates: $e");
+      return [];
+    }
+  }
+
+  Future<List<WorkUpdate>> getAllUpdatesForUser(String userId) async {
+    try {
+      final snapshot = await _firestore
+          .collection('work_updates')
+          .where('userId', isEqualTo: userId)
+          .get();
+
+      return snapshot.docs
+          .map((doc) => WorkUpdate.fromJson(doc.data()))
+          .toList();
+    } catch (e) {
+      print("Error fetching all updates: $e");
+      return [];
+    }
   }
 }
