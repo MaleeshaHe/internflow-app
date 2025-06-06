@@ -146,20 +146,6 @@ class _InternViewState extends State<InternView> {
                       const SizedBox(height: 20),
                       _buildSummaryCard(),
                       const SizedBox(height: 20),
-                      _buildFilterDropdown(),
-                      const SizedBox(height: 10),
-                      _filteredUpdates().isEmpty
-                          ? const Center(
-                              child: Padding(
-                                padding: EdgeInsets.symmetric(vertical: 40),
-                                child: Text('No work updates found.'),
-                              ),
-                            )
-                          : Column(
-                              children: _filteredUpdates()
-                                  .map(_buildUpdateCard)
-                                  .toList(),
-                            ),
                     ],
                   ),
                 ),
@@ -264,53 +250,4 @@ class _InternViewState extends State<InternView> {
       ),
     );
   }
-
-  Widget _buildFilterDropdown() {
-    return DropdownButtonFormField<String>(
-      value: _selectedFilter,
-      decoration: InputDecoration(
-        labelText: 'Filter by Work Type',
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      ),
-      items: _filterOptions
-          .map((type) => DropdownMenuItem(value: type, child: Text(type)))
-          .toList(),
-      onChanged: (value) {
-        setState(() => _selectedFilter = value!);
-      },
-    );
-  }
-
-  Widget _buildUpdateCard(WorkUpdate update) {
-    final timestamp = update.submittedAt;
-    String formattedDate = 'Date not available';
-
-    if (timestamp != null) {
-      try {
-        formattedDate =
-            timestamp.toDate().toLocal().toString().split('.').first;
-      } catch (e) {
-        print('Error formatting timestamp: $e');
-      }
-    }
-
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 2,
-      child: ListTile(
-        leading: const Icon(Icons.task_alt_rounded),
-        title: Text(update.description ?? 'No description'),
-        subtitle: Text(
-          update.date ?? 'No date',
-          style: const TextStyle(fontSize: 12, color: Colors.grey),
-        ),
-      ),
-    );
-  }
-}
-
-extension on String {
-  toDate() {}
 }
