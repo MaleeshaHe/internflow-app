@@ -145,9 +145,8 @@ class _AdminViewState extends State<AdminView> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              "Leave Calendar",
+              'Intern Leave Calendar',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.left,
             ),
             const SizedBox(height: 10),
             TableCalendar(
@@ -230,7 +229,7 @@ class _AdminViewState extends State<AdminView> {
       children: [
         const SizedBox(height: 16),
         const Text(
-          "📊 Attendance Summary",
+          "Attendance Summary",
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
@@ -252,7 +251,6 @@ class _AdminViewState extends State<AdminView> {
     return Card(
       elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      color: color.withOpacity(0.1),
       child: Container(
         width: 110,
         height: 90,
@@ -293,7 +291,7 @@ class _AdminViewState extends State<AdminView> {
             const SizedBox(height: 20),
             if (selectedInternId != null) ...[
               Text(
-                '📊 Work Overview for ${selectedInternData['name'] ?? ''}',
+                'Work Overview for ${selectedInternData['name'] ?? ''}',
                 style:
                     const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
