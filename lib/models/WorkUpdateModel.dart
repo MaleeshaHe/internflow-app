@@ -11,7 +11,6 @@ class WorkUpdate {
   final bool onLeave;
   final String description;
   final String submittedAt;
-  final Timestamp? timestamp;
 
   WorkUpdate({
     required this.userId,
@@ -24,7 +23,6 @@ class WorkUpdate {
     required this.onLeave,
     required this.description,
     required this.submittedAt,
-    this.timestamp,
   });
 
   factory WorkUpdate.fromJson(Map<String, dynamic> json) {
@@ -39,7 +37,6 @@ class WorkUpdate {
       onLeave: json['onLeave'] ?? false,
       description: json['description'] ?? '',
       submittedAt: json['submittedAt'] ?? '',
-      timestamp: json['timestamp'],
     );
   }
 
@@ -53,7 +50,7 @@ class WorkUpdate {
       'testing': testing,
       'waiting': waiting,
       'onLeave': onLeave,
-      'timestamp': timestamp ?? FieldValue.serverTimestamp(),
+      'submittedAt': submittedAt ?? FieldValue.serverTimestamp(),
     };
   }
 }

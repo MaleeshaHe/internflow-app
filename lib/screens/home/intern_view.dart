@@ -283,9 +283,9 @@ class _InternViewState extends State<InternView> {
   }
 
   Widget _buildUpdateCard(WorkUpdate update) {
-    final timestamp = update.timestamp;
-
+    final timestamp = update.submittedAt;
     String formattedDate = 'Date not available';
+
     if (timestamp != null) {
       try {
         formattedDate =
@@ -303,10 +303,14 @@ class _InternViewState extends State<InternView> {
         leading: const Icon(Icons.task_alt_rounded),
         title: Text(update.description ?? 'No description'),
         subtitle: Text(
-          formattedDate,
+          update.date ?? 'No date',
           style: const TextStyle(fontSize: 12, color: Colors.grey),
         ),
       ),
     );
   }
+}
+
+extension on String {
+  toDate() {}
 }

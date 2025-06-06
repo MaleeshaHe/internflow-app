@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:internflow/models/WorkUpdateModel.dart';
 import 'package:intl/intl.dart';
 
-
 class WorkUpdateService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
