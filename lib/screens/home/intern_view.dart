@@ -5,6 +5,7 @@ import 'package:internflow/models/UserModel.dart';
 import 'package:internflow/models/WorkUpdateModel.dart';
 import 'package:internflow/screens/home/work_update_screen.dart';
 import 'package:internflow/services/auth.dart';
+import 'package:pie_chart/pie_chart.dart';
 
 class InternView extends StatefulWidget {
   const InternView({super.key});
@@ -224,27 +225,42 @@ class _InternViewState extends State<InternView> {
 
   Widget _buildSummaryCard() {
     final stats = _getStats();
+
+    // Convert to double for the chart
+    final chartData =
+        stats.map((key, value) => MapEntry(key, value.toDouble()));
+
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('Work Summary',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text(
+              'Work Summary',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 12),
             Text('Total Updates: ${_workUpdates.length}'),
-            const SizedBox(height: 10),
-            ...stats.entries.map((entry) => Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(entry.key),
-                    Text(entry.value.toString(),
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
-                  ],
-                )),
+            const SizedBox(height: 20),
+            PieChart(
+              dataMap: chartData,
+              chartRadius: MediaQuery.of(context).size.width * 0.6,
+              legendOptions: const LegendOptions(
+                showLegendsInRow: false,
+                legendPosition: LegendPosition.right,
+                showLegends: true,
+              ),
+              chartValuesOptions: const ChartValuesOptions(
+                showChartValuesInPercentage: true,
+                showChartValueBackground: false,
+                showChartValues: true,
+              ),
+              chartType: ChartType.disc,
+              animationDuration: const Duration(milliseconds: 800),
+            ),
           ],
         ),
       ),
