@@ -1,10 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:internflow/models/UserModel.dart';
-import 'package:internflow/screens/home/work_update_detail_page.dart';
-import 'package:internflow/screens/home/work_update_screen.dart';
+import 'package:internflow/screens/home/intern_list_page.dart';
 import 'package:internflow/services/auth.dart';
+import 'package:intl/intl.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 class AdminView extends StatefulWidget {
   const AdminView({super.key});
@@ -16,55 +16,94 @@ class AdminView extends StatefulWidget {
 class _AdminViewState extends State<AdminView> {
   final AuthServices _auth = AuthServices();
   List<UserModel> _admins = [];
-  List<UserModel> _interns = [];
+  Map<DateTime, List<String>> _leaveEvents = {};
+  Map<String, String> _internNames = {};
+  CalendarFormat _calendarFormat = CalendarFormat.month;
+  DateTime _focusedDay = DateTime.now();
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadAllUsers();
+    _loadData();
   }
 
-  Future<void> _loadAllUsers() async {
+  Future<void> _loadData() async {
     setState(() => _isLoading = true);
     try {
-      final usersSnapshot =
+      final userSnapshot =
           await FirebaseFirestore.instance.collection('users').get();
-
-      final allUsers = usersSnapshot.docs
+      final users = userSnapshot.docs
           .map((doc) => UserModel.fromMap(doc.data(), doc.id))
           .toList();
 
-      _admins = allUsers.where((user) => user.role == 'admin').toList();
-      _interns = allUsers.where((user) => user.role == 'intern').toList();
+      _admins = users.where((u) => u.role == 'admin').toList();
+
+      for (var user in users.where((u) => u.role == 'intern')) {
+        _internNames[user.uid] = user.name ?? 'Unnamed Intern';
+      }
+
+      final logSnapshot =
+          await FirebaseFirestore.instance.collection('work_updates').get();
+
+      for (var doc in logSnapshot.docs) {
+        final data = doc.data();
+        if ((data['onLeave'] ?? false) == true) {
+          final String submittedAtStr = data['submittedAt'];
+          final DateTime ts = DateTime.parse(submittedAtStr);
+          final DateTime date = DateTime.utc(ts.year, ts.month, ts.day);
+          final uid = data['userId'] as String;
+
+          _leaveEvents.update(
+            date,
+            (existing) => {...existing, uid}.toList(), // avoid duplicates
+            ifAbsent: () => [uid],
+          );
+        }
+      }
     } catch (e) {
-      print('Error loading users: $e');
+      print('Error loading data: $e');
     }
 
     setState(() => _isLoading = false);
   }
 
-  Widget _buildUserCard(UserModel user, {bool isAdmin = false}) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      color: isAdmin ? Colors.blue.shade50 : null,
-      child: ListTile(
-        title: Text(user.name ?? ''),
-        subtitle: Text(user.email ?? ''),
-        trailing: isAdmin
-            ? const Icon(Icons.shield)
-            : const Icon(Icons.arrow_forward_ios),
-        onTap: isAdmin
-            ? null
-            : () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        WorkUpdateDetailPage(userId: user.uid),
+  List<String> _getUsersOnLeave(DateTime day) {
+    // Normalize the day to UTC to match our keys
+    final key = DateTime.utc(day.year, day.month, day.day);
+    return _leaveEvents[key]?.toSet().toList() ?? []; // Remove duplicates
+  }
+
+  void _showLeaveDialog(DateTime date) {
+    final uids = _getUsersOnLeave(date);
+    final names = uids.map((uid) => _internNames[uid] ?? 'Unknown').toList();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          'Interns on leave - ${DateFormat('MMM dd, yyyy').format(date)}',
+          style: const TextStyle(fontSize: 18),
+        ),
+        content: names.isEmpty
+            ? const Text('No interns on leave this day.')
+            : SizedBox(
+                width: double.maxFinite,
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: names.length,
+                  itemBuilder: (context, index) => ListTile(
+                    leading: const Icon(Icons.person_outline),
+                    title: Text(names[index]),
                   ),
-                );
-              },
+                ),
+              ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
       ),
     );
   }
@@ -76,6 +115,10 @@ class _AdminViewState extends State<AdminView> {
         title: const Text('Admin Dashboard'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadData,
+          ),
+          IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async => await _auth.signOut(),
           ),
@@ -83,33 +126,102 @@ class _AdminViewState extends State<AdminView> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Padding(
+          : SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Admins:',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Admins:',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 8),
                   if (_admins.isEmpty)
                     const Text('No admins found.')
                   else
-                    ..._admins
-                        .map((admin) => _buildUserCard(admin, isAdmin: true)),
-                  const Divider(height: 30, thickness: 1.5),
-                  const Text('Interns:',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  Expanded(
-                    child: _interns.isEmpty
-                        ? const Center(child: Text('No interns found.'))
-                        : ListView.builder(
-                            itemCount: _interns.length,
-                            itemBuilder: (context, index) =>
-                                _buildUserCard(_interns[index]),
+                    ..._admins.map((admin) => Card(
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10)),
+                          color: Colors.blue.shade50,
+                          child: ListTile(
+                            title: Text(admin.name ?? ''),
+                            subtitle: Text(admin.email ?? ''),
+                            trailing: const Icon(Icons.shield),
                           ),
+                        )),
+                  const SizedBox(height: 30),
+                  Center(
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.people),
+                      label: const Text('View Interns'),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const InternListPage()),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 24, vertical: 12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  const Text(
+                    'Intern Leaves Calendar:',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+                  Card(
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: TableCalendar(
+                        firstDay: DateTime.utc(2020, 1, 1),
+                        lastDay: DateTime.utc(2030, 12, 31),
+                        focusedDay: _focusedDay,
+                        calendarFormat: _calendarFormat,
+                        onFormatChanged: (format) {
+                          setState(() => _calendarFormat = format);
+                        },
+                        onPageChanged: (focusedDay) {
+                          setState(() => _focusedDay = focusedDay);
+                        },
+                        calendarStyle: CalendarStyle(
+                          markerDecoration: BoxDecoration(
+                            color: Colors.red.shade400,
+                            shape: BoxShape.circle,
+                          ),
+                          markersMaxCount: 3,
+                          markerSize: 8,
+                          markerMargin:
+                              const EdgeInsets.symmetric(horizontal: 1),
+                        ),
+                        eventLoader: (day) {
+                          final users = _getUsersOnLeave(day);
+                          return users.isNotEmpty ? users : [];
+                        },
+                        onDaySelected: (selectedDay, focusedDay) {
+                          setState(() {
+                            _focusedDay = focusedDay;
+                          });
+                          _showLeaveDialog(selectedDay);
+                        },
+                        headerStyle: HeaderStyle(
+                          formatButtonVisible: true,
+                          titleCentered: true,
+                          formatButtonDecoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.grey),
+                          ),
+                          formatButtonTextStyle:
+                              const TextStyle(color: Colors.black),
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
