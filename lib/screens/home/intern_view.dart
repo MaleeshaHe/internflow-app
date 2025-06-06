@@ -48,9 +48,8 @@ class _InternViewState extends State<InternView> {
         .get();
 
     setState(() {
-      _workUpdates = snapshot.docs
-          .map((doc) => WorkUpdate.fromJson(doc.data() as Map<String, dynamic>))
-          .toList();
+      _workUpdates =
+          snapshot.docs.map((doc) => WorkUpdate.fromJson(doc.data())).toList();
       _isLoading = false;
     });
   }
