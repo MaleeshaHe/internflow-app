@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:pie_chart/pie_chart.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -11,6 +12,7 @@ class AdminView extends StatefulWidget {
 }
 
 class _AdminViewState extends State<AdminView> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
   String? selectedInternId;
   Map<String, dynamic> selectedInternData = {};
   List<DocumentSnapshot> interns = [];
@@ -47,18 +49,49 @@ class _AdminViewState extends State<AdminView> {
 
     for (var doc in updates) {
       final data = doc.data() as Map<String, dynamic>;
-      if (data['onLeave'] == true && data['date'] != null) {
-        try {
-          final date = DateTime.parse(data['date']);
-          final normalized = DateTime(date.year, date.month, date.day);
-          events[normalized] = ['On Leave'];
-        } catch (_) {}
+
+      // Handle leave dates - only process if onLeave is true
+      if (data['onLeave'] == true) {
+        DateTime? date;
+
+        // First try to get date from 'date' field
+        if (data['date'] != null) {
+          if (data['date'] is Timestamp) {
+            date = (data['date'] as Timestamp).toDate();
+          } else if (data['date'] is String) {
+            try {
+              date = DateTime.parse(data['date'] as String);
+            } catch (e) {
+              print('Error parsing date string: ${data['date']}');
+            }
+          }
+        }
+
+        // If date is still null, try to get it from document ID (assuming it's a timestamp)
+        if (date == null) {
+          try {
+            date = DateTime.fromMillisecondsSinceEpoch(int.parse(doc.id));
+          } catch (e) {
+            print('Error parsing date from document ID: ${doc.id}');
+          }
+        }
+
+        if (date != null) {
+          final normalizedDate = DateTime(date.year, date.month, date.day);
+          events[normalizedDate] = ['On Leave']; // Using a descriptive string
+        }
       }
     }
 
     setState(() {
       workUpdates = updates;
       leaveEvents = events;
+    });
+
+    // Debug print
+    print('Leave events count: ${events.length}');
+    events.forEach((date, events) {
+      print('Leave on ${date}: $events');
     });
   }
 
@@ -150,8 +183,8 @@ class _AdminViewState extends State<AdminView> {
             ),
             const SizedBox(height: 10),
             TableCalendar(
-              firstDay: DateTime.utc(2020, 1, 1),
-              lastDay: DateTime.utc(2030, 12, 31),
+              firstDay: DateTime.now().subtract(const Duration(days: 365)),
+              lastDay: DateTime.now().add(const Duration(days: 365)),
               focusedDay: focusedDay,
               calendarFormat: calendarFormat,
               onFormatChanged: (format) {
@@ -178,8 +211,17 @@ class _AdminViewState extends State<AdminView> {
                   color: Colors.red.shade400,
                   shape: BoxShape.circle,
                 ),
-                markersMaxCount: 5,
-                markerSize: 12,
+                markersMaxCount:
+                    1, // Changed to 1 since we only have leave events
+                markerSize: 8, // Smaller size for better visibility
+                todayDecoration: BoxDecoration(
+                  color: Colors.blue.shade100,
+                  shape: BoxShape.circle,
+                ),
+                selectedDecoration: BoxDecoration(
+                  color: Colors.blue.shade300,
+                  shape: BoxShape.circle,
+                ),
               ),
               headerStyle: HeaderStyle(
                 formatButtonVisible: true,
@@ -282,6 +324,11 @@ class _AdminViewState extends State<AdminView> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Admin View'),
+        actions: [
+          IconButton(
+              icon: const Icon(Icons.logout),
+              onPressed: () async => await _auth.signOut()),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
