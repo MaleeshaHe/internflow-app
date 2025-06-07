@@ -112,5 +112,28 @@ class WorkUpdateService {
       return [];
     }
   }
-  
+
+  // Backfills missing date fields based on submittedAt
+  Future<void> backfillMissingDates(String userId) async {
+    try {
+      final snapshot = await _firestore
+          .collection('work_updates')
+          .where('userId', isEqualTo: userId)
+          .get();
+
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        if (!data.containsKey('date') ||
+            data['date'] == null ||
+            data['date'].isEmpty) {
+          final submittedAt = DateTime.parse(data['submittedAt']);
+          final newDate = DateFormat('yyyy-MM-dd').format(submittedAt);
+          await doc.reference.update({'date': newDate});
+          print("Backfilled date for doc ${doc.id} to $newDate");
+        }
+      }
+    } catch (e) {
+      print("Error backfilling dates: $e");
+    }
+  }
 }
