@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:internflow/screens/home/intern_list_page.dart';
 import 'package:pie_chart/pie_chart.dart';
 import 'package:table_calendar/table_calendar.dart';
 
@@ -110,9 +111,15 @@ class _AdminViewState extends State<AdminView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          "Intern Summary",
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        const Row(
+          children: [
+            Icon(Icons.dashboard_customize, color: Colors.deepPurple, size: 24),
+            SizedBox(width: 8),
+            Text(
+              "Intern Summary",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+          ],
         ),
         const SizedBox(height: 12),
         Row(
@@ -122,6 +129,37 @@ class _AdminViewState extends State<AdminView> {
             _buildStatCard("With Updates", "$internsWithUpdates", Colors.green),
             _buildStatCard("No Updates", "$internsWithoutUpdates", Colors.red),
           ],
+        ),
+        const SizedBox(height: 12),
+        Align(
+          alignment: Alignment.center,
+          child: ElevatedButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const InternListPage()),
+              );
+            },
+            icon:
+                const Icon(Icons.people_outline, size: 20, color: Colors.white),
+            label: const Text(
+              "View All Interns",
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blueAccent,
+              foregroundColor: Colors.white,
+              elevation: 4,
+              shadowColor: Colors.indigoAccent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              textStyle: const TextStyle(
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
         ),
         const SizedBox(height: 20),
       ],
@@ -383,7 +421,7 @@ class _AdminViewState extends State<AdminView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Admin View'),
+        title: const Text("ADMIN"),
         actions: [
           IconButton(
               icon: const Icon(Icons.logout),
