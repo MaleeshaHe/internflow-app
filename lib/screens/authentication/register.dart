@@ -29,11 +29,12 @@ class _RegisterState extends State<Register> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              const SizedBox(height: 40),
+              const SizedBox(height: 90),
               Center(
-                child: FlutterLogo(
-                  size: 100,
-                  style: FlutterLogoStyle.markOnly,
+                child: Image.asset(
+                  'assets/logo.png',
+                  height: 100,
+                  width: 100,
                 ),
               ),
               const SizedBox(height: 32),
@@ -80,7 +81,7 @@ class _RegisterState extends State<Register> {
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                      ), // ← FIXED: missing closing parenthesis here
+                      ),
                       keyboardType: TextInputType.emailAddress,
                       validator: (val) =>
                           val!.isEmpty ? 'Please enter your email' : null,

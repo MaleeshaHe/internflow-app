@@ -26,9 +26,9 @@ class MyApp extends StatelessWidget {
           primarySwatch: Colors.blue,
           scaffoldBackgroundColor: Colors.white,
           colorScheme: ColorScheme.fromSwatch(
-            primarySwatch: Colors.blue,
-            accentColor: Colors.blueAccent,
-          ).copyWith(secondary: Colors.blueAccent),
+            primarySwatch: Colors.cyan,
+            accentColor: Colors.cyanAccent,
+          ).copyWith(secondary: Colors.cyanAccent, primary: Colors.cyan),
         ),
         debugShowCheckedModeBanner: false,
         home: Wrapper(),
