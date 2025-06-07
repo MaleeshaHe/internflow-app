@@ -113,7 +113,6 @@ class _AdminViewState extends State<AdminView> {
       children: [
         const Row(
           children: [
-            Icon(Icons.dashboard_customize, color: Colors.deepPurple, size: 24),
             SizedBox(width: 8),
             Text(
               "Intern Summary",
@@ -147,10 +146,9 @@ class _AdminViewState extends State<AdminView> {
               style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blueAccent,
+              backgroundColor: Theme.of(context).primaryColor,
               foregroundColor: Colors.white,
               elevation: 4,
-              shadowColor: Colors.indigoAccent,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
