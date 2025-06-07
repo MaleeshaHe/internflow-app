@@ -96,26 +96,55 @@ class _AdminViewState extends State<AdminView> {
   }
 
   Widget buildInternDropdown() {
-    return DropdownButton<String>(
-      hint: const Text('Select Intern'),
-      value: selectedInternId,
-      onChanged: (value) {
-        setState(() {
-          selectedInternId = value;
-          selectedInternData = interns
-              .firstWhere((doc) => doc['uid'] == value)
-              .data() as Map<String, dynamic>;
-        });
-        fetchWorkUpdates(value!);
-      },
-      items: interns.map((doc) {
-        final name = doc['name'];
-        final uid = doc['uid'];
-        return DropdownMenuItem<String>(
-          value: uid,
-          child: Text(name),
-        );
-      }).toList(),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade400),
+        borderRadius: BorderRadius.circular(12),
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.2),
+            spreadRadius: 1,
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: selectedInternId,
+          hint: const Text(
+            'Select Intern',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          ),
+          icon: const Icon(Icons.arrow_drop_down, color: Colors.blueAccent),
+          isExpanded: true,
+          style: const TextStyle(
+            fontSize: 16,
+            color: Colors.black87,
+            fontWeight: FontWeight.w500,
+          ),
+          dropdownColor: Colors.white,
+          onChanged: (value) {
+            setState(() {
+              selectedInternId = value;
+              selectedInternData = interns
+                  .firstWhere((doc) => doc['uid'] == value)
+                  .data() as Map<String, dynamic>;
+            });
+            fetchWorkUpdates(value!);
+          },
+          items: interns.map((doc) {
+            final name = doc['name'];
+            final uid = doc['uid'];
+            return DropdownMenuItem<String>(
+              value: uid,
+              child: Text(name),
+            );
+          }).toList(),
+        ),
+      ),
     );
   }
 
