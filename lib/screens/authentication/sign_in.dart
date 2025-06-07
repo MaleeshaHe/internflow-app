@@ -29,10 +29,14 @@ class _SignInState extends State<SignIn> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              const SizedBox(height: 40),
-              // App logo
-              const Center(
-                child: FlutterLogo(size: 100),
+              const SizedBox(height: 90),
+
+              Center(
+                child: Image.asset(
+                  'assets/logo.png',
+                  height: 100,
+                  width: 100,
+                ),
               ),
               const SizedBox(height: 32),
               Text(
