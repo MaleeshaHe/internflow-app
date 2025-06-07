@@ -22,6 +22,10 @@ class _AdminViewState extends State<AdminView> {
   DateTime focusedDay = DateTime.now();
   CalendarFormat calendarFormat = CalendarFormat.month;
 
+  int totalInterns = 0;
+  int internsWithUpdates = 0;
+  int internsWithoutUpdates = 0;
+
   @override
   void initState() {
     super.initState();
@@ -29,12 +33,28 @@ class _AdminViewState extends State<AdminView> {
   }
 
   Future<void> fetchInterns() async {
-    final snapshot = await FirebaseFirestore.instance
+    final internSnapshot = await FirebaseFirestore.instance
         .collection('users')
         .where('role', isEqualTo: 'intern')
         .get();
+
+    final internDocs = internSnapshot.docs;
+    final internIds = internDocs.map((doc) => doc['uid'] as String).toList();
+
+    final updatesSnapshot =
+        await FirebaseFirestore.instance.collection('work_updates').get();
+
+    final updatedInternIds = updatesSnapshot.docs
+        .map((doc) => (doc.data() as Map<String, dynamic>)['userId'])
+        .whereType<String>()
+        .toSet();
+
     setState(() {
-      interns = snapshot.docs;
+      interns = internDocs;
+      totalInterns = internDocs.length;
+      internsWithUpdates =
+          internIds.where((id) => updatedInternIds.contains(id)).length;
+      internsWithoutUpdates = totalInterns - internsWithUpdates;
     });
   }
 
@@ -50,11 +70,9 @@ class _AdminViewState extends State<AdminView> {
     for (var doc in updates) {
       final data = doc.data() as Map<String, dynamic>;
 
-      // Handle leave dates - only process if onLeave is true
       if (data['onLeave'] == true) {
         DateTime? date;
 
-        // First try to get date from 'date' field
         if (data['date'] != null) {
           if (data['date'] is Timestamp) {
             date = (data['date'] as Timestamp).toDate();
@@ -67,7 +85,6 @@ class _AdminViewState extends State<AdminView> {
           }
         }
 
-        // If date is still null, try to get it from document ID (assuming it's a timestamp)
         if (date == null) {
           try {
             date = DateTime.fromMillisecondsSinceEpoch(int.parse(doc.id));
@@ -78,7 +95,7 @@ class _AdminViewState extends State<AdminView> {
 
         if (date != null) {
           final normalizedDate = DateTime(date.year, date.month, date.day);
-          events[normalizedDate] = ['On Leave']; // Using a descriptive string
+          events[normalizedDate] = ['On Leave'];
         }
       }
     }
@@ -87,12 +104,28 @@ class _AdminViewState extends State<AdminView> {
       workUpdates = updates;
       leaveEvents = events;
     });
+  }
 
-    // Debug print
-    print('Leave events count: ${events.length}');
-    events.forEach((date, events) {
-      print('Leave on ${date}: $events');
-    });
+  Widget buildDashboardSummary() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          "Intern Summary",
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _buildStatCard("Total Interns", "$totalInterns", Colors.deepPurple),
+            _buildStatCard("With Updates", "$internsWithUpdates", Colors.green),
+            _buildStatCard("No Updates", "$internsWithoutUpdates", Colors.red),
+          ],
+        ),
+        const SizedBox(height: 20),
+      ],
+    );
   }
 
   Widget buildInternDropdown() {
@@ -180,7 +213,6 @@ class _AdminViewState extends State<AdminView> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 16),
-        const SizedBox(height: 10),
         PieChart(
           dataMap: dataMap,
           chartType: ChartType.disc,
@@ -240,9 +272,8 @@ class _AdminViewState extends State<AdminView> {
                   color: Colors.red.shade400,
                   shape: BoxShape.circle,
                 ),
-                markersMaxCount:
-                    1, // Changed to 1 since we only have leave events
-                markerSize: 8, // Smaller size for better visibility
+                markersMaxCount: 1,
+                markerSize: 8,
                 todayDecoration: BoxDecoration(
                   color: Colors.blue.shade100,
                   shape: BoxShape.circle,
@@ -338,7 +369,7 @@ class _AdminViewState extends State<AdminView> {
             const SizedBox(height: 4),
             Text(title,
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 13,
                   fontWeight: FontWeight.w500,
                   color: color,
                 )),
@@ -363,6 +394,7 @@ class _AdminViewState extends State<AdminView> {
         padding: const EdgeInsets.all(16.0),
         child: ListView(
           children: [
+            buildDashboardSummary(),
             buildInternDropdown(),
             const SizedBox(height: 20),
             if (selectedInternId != null) ...[
