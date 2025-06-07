@@ -265,7 +265,7 @@ class _WorkUpdateDetailPageState extends State<WorkUpdateDetailPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text("📅 $date",
+                            Text("📅 $submittedAt",
                                 style: const TextStyle(
                                     fontWeight: FontWeight.bold, fontSize: 16)),
                             const SizedBox(height: 8),

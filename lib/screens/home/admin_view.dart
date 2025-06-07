@@ -421,7 +421,7 @@ class _AdminViewState extends State<AdminView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("ADMIN"),
+        title: const Text("Admin Dashboard"),
         actions: [
           IconButton(
               icon: const Icon(Icons.logout),
