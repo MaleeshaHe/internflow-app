@@ -280,9 +280,11 @@ class _WorkUpdateDetailPageState extends State<WorkUpdateDetailPage> {
                                   style: const TextStyle(fontSize: 14)),
                             ],
                             const SizedBox(height: 12),
-                            Text("⏱ Submitted at: $submittedAt",
-                                style: const TextStyle(
-                                    fontSize: 12, color: Colors.grey)),
+                            Text(
+                              "⏱ Submitted at: ${DateFormat.jm().format(DateTime.tryParse(update.submittedAt) ?? DateTime.now())}",
+                              style: const TextStyle(
+                                  fontSize: 12, color: Colors.grey),
+                            ),
                           ],
                         ),
                       ),
